@@ -1,117 +1,111 @@
-package com.example.pasteleriakotlin.ui.screen
+﻿package com.example.pasteleriakotlin.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pasteleriakotlin.data.model.Product
-import com.example.pasteleriakotlin.data.repo.FakeProductRepository
+import com.example.pasteleriakotlin.ui.catalog.CatalogUiState
+import com.example.pasteleriakotlin.ui.components.CartSheetContent
 import com.example.pasteleriakotlin.ui.components.ProductCard
-import com.example.pasteleriakotlin.ui.state.CartManager
-import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Pantalla del catálogo de productos.
- * Muestra una grilla con productos y un ícono de carrito con badge.
- */
+// Muestra el catalogo y permite ver/editar el carrito
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogScreen(
+    uiState: CatalogUiState,
     onBack: () -> Unit,
-    onProductClick: (String) -> Unit
+    onProductClick: (String) -> Unit,
+    onAddToCart: (Product) -> Unit,
+    onRemoveFromCart: (String) -> Unit,
+    onPay: () -> Unit
 ) {
-    // Repositorio simple en memoria para listar productos
-    val repo = remember { FakeProductRepository() }
-    var products by remember { mutableStateOf(emptyList<Product>()) }
-    LaunchedEffect(Unit) { repo.getProducts().collectLatest { products = it } }
-
-    // Estado para mostrar/ocultar el carrito
     var showCart by remember { mutableStateOf(false) }
-    // Flujo del carrito para calcular la cantidad total
-    val cartItems by CartManager.itemsFlow().collectAsState(initial = emptyList())
-    val itemCount = cartItems.sumOf { item -> item.quantity }
+    val itemCount = uiState.cartItems.sumOf { it.quantity }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Catálogo") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("Atrás") } },
+                title = { Text("Catalogo") },
+                navigationIcon = { TextButton(onClick = onBack) { Text("Atras") } },
                 actions = {
                     BadgedBox(badge = { if (itemCount > 0) Badge { Text(itemCount.toString()) } }) {
                         IconButton(onClick = { showCart = true }) {
-                            Icon(Icons.Filled.ShoppingCart, contentDescription = "Carrito")
+                            Icon(
+                                Icons.Filled.ShoppingCart,
+                                contentDescription = "Carrito"
+                            )
                         }
                     }
                 }
             )
         }
     ) { innerPadding ->
-        // Cuadrícula adaptativa para las tarjetas de producto
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(180.dp),
-            modifier = Modifier.padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(products, key = { it.id }) { p ->
-                ProductCard(
-                    p,
-                    onClick = { onProductClick(p.id) },
-                    onAddToCart = { CartManager.add(p) }
-                )
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(180.dp),
+                modifier = Modifier.padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(uiState.products, key = { it.id }) { product ->
+                    ProductCard(
+                        p = product,
+                        onClick = { onProductClick(product.id) },
+                        onAddToCart = { onAddToCart(product) }
+                    )
+                }
             }
         }
     }
 
-    // Hoja modal con el contenido del carrito
     if (showCart) {
         ModalBottomSheet(onDismissRequest = { showCart = false }) {
-            CartSheetContent(onClose = { showCart = false })
-        }
-    }
-}
-
-/**
- * Contenido de la hoja inferior (BottomSheet) para el carrito.
- */
-@Composable
-private fun CartSheetContent(onClose: () -> Unit) {
-    val items by CartManager.itemsFlow().collectAsState(initial = emptyList())
-    val total by CartManager.totalFlow().collectAsState(initial = 0)
-    Column(Modifier.padding(16.dp)) {
-        Text("Carrito", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        if (items.isEmpty()) {
-            Text("Tu carrito está vacío")
-        } else {
-            // Lista simple de ítems con opción para eliminar
-            items.forEach { ci ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("${ci.product.name} x${ci.quantity}")
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("CLP ${ci.product.price * ci.quantity}")
-                        OutlinedButton(onClick = { CartManager.remove(ci.product.id) }) { Text("Eliminar") }
-                    }
+            CartSheetContent(
+                items = uiState.cartItems,
+                total = uiState.total,
+                onClose = { showCart = false },
+                onRemove = onRemoveFromCart,
+                onPay = {
+                    onPay()
+                    showCart = false
                 }
-                Spacer(Modifier.height(8.dp))
-            }
-            Spacer(Modifier.height(12.dp))
-            Text("Total: CLP $total", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onClose) { Text("Cerrar") }
-                Button(onClick = { CartManager.clear(); onClose() }) { Text("Pagar") }
-            }
+            )
         }
     }
 }

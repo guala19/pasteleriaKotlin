@@ -1,4 +1,4 @@
-package com.example.pasteleriakotlin.ui.theme
+﻿package com.example.pasteleriakotlin.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -13,10 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 private val LightColors = lightColorScheme()
 private val DarkColors = darkColorScheme()
 
-/**
- * Tema Material 3 para la app.
- * Usa Dynamic Color en Android 12+ y un esquema claro/oscuro básico.
- */
+// Tema basico con soporte para colores dinamicos
 @Composable
 fun PasteleriaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -33,7 +30,6 @@ fun PasteleriaTheme(
     }
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = androidx.compose.material3.Typography(),
         content = content
     )
 }
