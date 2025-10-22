@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Usa un tema de plataforma sin ActionBar; Compose maneja la UI. -->
+    <style name="Theme.PasteleriaKotlin" parent="android:Theme.Material.Light.NoActionBar" />
+
+</resources>
