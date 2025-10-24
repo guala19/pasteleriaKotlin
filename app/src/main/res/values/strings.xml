@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Pasteleria Mil Sabores</string>
+    <string name="nav_catalog">Catálogo</string>
+    <string name="nav_location">Ubicación</string>
+    <string name="location_title">Cómo llegar</string>
+    <string name="location_description">Visítanos en Av. Siempre Viva 742, CDMX.</string>
+    <string name="google_maps_key">YOUR_API_KEY_HERE</string>
 </resources>

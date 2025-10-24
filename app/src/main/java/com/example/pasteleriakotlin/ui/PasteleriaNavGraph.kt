@@ -15,14 +15,12 @@ import com.example.pasteleriakotlin.data.repo.FakeProductRepository
 import com.example.pasteleriakotlin.data.repo.ProductRepository
 import com.example.pasteleriakotlin.ui.catalog.CatalogViewModel
 import com.example.pasteleriakotlin.ui.product.ProductDetailViewModel
-import com.example.pasteleriakotlin.ui.screen.CatalogScreen
 import com.example.pasteleriakotlin.ui.screen.HomeScreen
 import com.example.pasteleriakotlin.ui.screen.ProductDetailScreen
 
 // Rutas simples para navegar entre pantallas
 sealed class Route(val route: String) {
     data object Home : Route("home")
-    data object Catalog : Route("catalog")
     data object ProductDetail : Route("product/{id}") {
         fun create(id: String) = "product/$id"
     }
@@ -39,16 +37,12 @@ fun PasteleriaNavGraph() {
     // Configuramos la navegación entre pantallas
     NavHost(nav, startDestination = Route.Home.route) {
         composable(Route.Home.route) {
-            HomeScreen(onGoCatalog = { nav.navigate(Route.Catalog.route) })
-        }
-        composable(Route.Catalog.route) {
             val catalogViewModel: CatalogViewModel = viewModel(
                 factory = CatalogViewModel.provideFactory(productRepository, cartRepository)
             )
             val uiState by catalogViewModel.uiState.collectAsState()
-            CatalogScreen(
-                uiState = uiState,
-                onBack = { nav.popBackStack() },
+            HomeScreen(
+                catalogUiState = uiState,
                 onProductClick = { id -> nav.navigate(Route.ProductDetail.create(id)) },
                 onAddToCart = catalogViewModel::addToCart,
                 onRemoveFromCart = catalogViewModel::removeFromCart,
@@ -79,4 +73,3 @@ fun PasteleriaNavGraph() {
         }
     }
 }
-

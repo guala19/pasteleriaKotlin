@@ -65,4 +65,11 @@ dependencies {
 
     // Coroutines (usadas por el repositorio fake y el carrito)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Google Maps Compose
+    val mapsBom = platform("com.google.android.libraries.maps:maps-platform-bom:18.3.0")
+    implementation(mapsBom)
+    implementation("com.google.android.libraries.maps:maps")
+    implementation("com.google.android.gms:play-services-maps")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
 }
