@@ -52,7 +52,9 @@ fun PasteleriaNavGraph() {
                 onProductClick = { id -> nav.navigate(Route.ProductDetail.create(id)) },
                 onAddToCart = catalogViewModel::addToCart,
                 onRemoveFromCart = catalogViewModel::removeFromCart,
-                onPay = catalogViewModel::clearCart
+                onPay = catalogViewModel::clearCart,
+                onSearchChange = catalogViewModel::updateSearchQuery,
+                onCategorySelect = catalogViewModel::selectCategory
             )
         }
         composable(

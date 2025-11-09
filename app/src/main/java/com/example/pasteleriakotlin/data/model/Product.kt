@@ -7,5 +7,8 @@ data class Product(
     val description: String,
     val price: Int,
     val imageUrl: String,
-    val available: Boolean = true
+    val available: Boolean = true,
+    val category: String = "Otros",
+    val ingredients: List<String> = emptyList(),
+    val tags: List<String> = emptyList()
 )

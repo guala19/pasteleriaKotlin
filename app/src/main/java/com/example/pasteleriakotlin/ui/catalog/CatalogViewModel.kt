@@ -18,7 +18,10 @@ data class CatalogUiState(
     val isLoading: Boolean = true,
     val products: List<Product> = emptyList(),
     val cartItems: List<CartItemUi> = emptyList(),
-    val total: Int = 0
+    val total: Int = 0,
+    val searchQuery: String = "",
+    val selectedCategory: String? = null,
+    val availableCategories: List<String> = emptyList()
 )
 
 // Mantiene la lista de productos y el estado del carrito
@@ -29,6 +32,8 @@ class CatalogViewModel(
 
     private val _uiState = MutableStateFlow(CatalogUiState())
     val uiState: StateFlow<CatalogUiState> = _uiState.asStateFlow()
+    
+    private var allProducts = listOf<Product>()
 
     init {
         observeProducts()
@@ -38,7 +43,15 @@ class CatalogViewModel(
     private fun observeProducts() {
         viewModelScope.launch {
             productRepository.getProducts().collectLatest { products ->
-                _uiState.update { it.copy(products = products, isLoading = false) }
+                allProducts = products
+                val categories = products.map { it.category }.distinct().sorted()
+                _uiState.update { 
+                    it.copy(
+                        products = filterProducts(products, it.searchQuery, it.selectedCategory),
+                        isLoading = false,
+                        availableCategories = categories
+                    ) 
+                }
             }
         }
     }
@@ -57,6 +70,42 @@ class CatalogViewModel(
                 val total = mapped.sumOf { it.subtotal }
                 _uiState.update { it.copy(cartItems = mapped, total = total) }
             }
+        }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.update {
+            val filtered = filterProducts(allProducts, query, it.selectedCategory)
+            it.copy(searchQuery = query, products = filtered)
+        }
+    }
+
+    fun selectCategory(category: String?) {
+        _uiState.update {
+            val filtered = filterProducts(allProducts, it.searchQuery, category)
+            it.copy(selectedCategory = category, products = filtered)
+        }
+    }
+
+    private fun filterProducts(
+        products: List<Product>,
+        searchQuery: String,
+        category: String?
+    ): List<Product> {
+        return products.filter { product ->
+            val matchesSearch = if (searchQuery.isEmpty()) {
+                true
+            } else {
+                val query = searchQuery.lowercase().trim()
+                product.name.lowercase().contains(query) ||
+                product.description.lowercase().contains(query) ||
+                product.category.lowercase().contains(query) ||
+                product.ingredients.any { it.lowercase().contains(query) }
+            }
+
+            val matchesCategory = category == null || product.category == category
+
+            matchesSearch && matchesCategory
         }
     }
 
