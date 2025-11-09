@@ -5,13 +5,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-package com.example.pasteleriakotlin.data.repo
-
-import com.example.pasteleriakotlin.data.model.Product
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
-
 // Lista de 14 productos en 8 categorías para Mil Sabores
 class FakeProductRepository : ProductRepository {
     private val items = MutableStateFlow(
